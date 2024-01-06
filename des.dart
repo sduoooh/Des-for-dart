@@ -3,7 +3,6 @@
 // Accepts one parameter as your message
 // And a non-zero number of arguments as your keys but it must within a list
 
-// 暂时不整解密哈
 
 class Des {
   String strEnc(String data, List<String> keys) {
@@ -15,22 +14,22 @@ class Des {
 
     var encrypted = "";
     var dataBytes = data.codeUnits;
-    var key = keys.map((e) => getKeyBytes(e)).toList();
+    var key = keys.map((e) => _getKeyBytes(e)).toList();
     var times = (dataLength / 4).ceil();
     for (var i = 0; i < times; i++) {
-      var dataByte = strToBt(dataBytes.sublist(4 * i).take(4));
+      var dataByte = _strToBt(dataBytes.sublist(4 * i).take(4));
       var temp = dataByte;
       for (var j = 0; j < keyLength; j++) {
         for (var k = 0; k < key[j].length; k++) {
-          temp = enc(temp, key[j][k]);
+          temp = _enc(temp, key[j][k]);
         }
       }
-      encrypted = encrypted + bt64ToHex(temp);
+      encrypted = encrypted + _bt64ToHex(temp);
     }
     return encrypted;
   }
 
-  List<List<int>> getKeyBytes(String key) {
+  List<List<int>> _getKeyBytes(String key) {
     if (key.isEmpty) {
       throw new Exception("any keys are missing");
     }
@@ -39,7 +38,7 @@ class Des {
     var times = (key.length / 4).ceil();
 
     for (var i = 0; i < times; i++) {
-      keyBytes.add(strToBt(key.codeUnits.sublist(4 * i).take(4)));
+      keyBytes.add(_strToBt(key.codeUnits.sublist(4 * i).take(4)));
     }
 
     return keyBytes;
@@ -51,7 +50,7 @@ class Des {
   // 若 C 为整数，其用 2 * n + 1 通项可表示时，意味着其可用 n 个上一位权重与 单个本位权重的组合完整表示该值，亦即本位为 1
   // 若用 2 * n 可表示时，意味着只需 n 个上一位权重即可完整表示该值，亦即本位为 0
 
-  List<int> strToBt(str) {
+  List<int> _strToBt(str) {
     if (str is String) {
       str = str.codeUnits;
     }
@@ -73,9 +72,9 @@ class Des {
     return bt;
   }
 
-  List<int> enc(List<int> dataByte, List<int> keyByte) {
-    var keys = generateKeys(keyByte);
-    var ipByte = initPermute(dataByte);
+  List<int> _enc(List<int> dataByte, List<int> keyByte) {
+    var keys = _generateKeys(keyByte);
+    var ipByte = _initPermute(dataByte);
     var ipLeft = List.filled(32, 0);
     var ipRight = List.filled(32, 0);
     var tempLeft = List.filled(32, 0);
@@ -92,8 +91,8 @@ class Des {
       for (var m = 0; m < 48; m++) {
         key[m] = keys[i][m];
       }
-      var tempRight = xor(
-          pPermute(sBoxPermute(xor(expandPermute(ipRight), key))), tempLeft);
+      var tempRight = _xor(
+          _pPermute(_sBoxPermute(_xor(_expandPermute(ipRight), key))), tempLeft);
       for (var n = 0; n < 32; n++) {
         ipRight[n] = tempRight[n];
       }
@@ -104,10 +103,10 @@ class Des {
       finalData[i] = ipRight[i];
       finalData[32 + i] = ipLeft[i];
     }
-    return finallyPermute(finalData);
+    return _finallyPermute(finalData);
   }
 
-  String bt64ToHex(List<int> byteData) {
+  String _bt64ToHex(List<int> byteData) {
     var hex = "";
     for (var i = 0; i < 16; i++) {
       var bt = byteData.sublist(i * 4, i * 4 + 4).join();
@@ -116,7 +115,7 @@ class Des {
     return hex;
   }
 
-  List<List<int>> generateKeys(List<int> keyByte) {
+  List<List<int>> _generateKeys(List<int> keyByte) {
     var key = List.filled(56, 0);
     List<List<int>> keys = List.generate(16, (index) => List.filled(48, 0));
 
@@ -198,7 +197,7 @@ class Des {
     return keys;
   }
 
-  List<int> initPermute(List<int> originalData) {
+  List<int> _initPermute(List<int> originalData) {
     var ipByte = List.filled(64, 0);
     for (var i = 0, m = 1, n = 0; i < 4; i++, m += 2, n += 2) {
       for (var j = 7, k = 0; j >= 0; j--, k++) {
@@ -209,7 +208,7 @@ class Des {
     return ipByte;
   }
 
-  List<int> expandPermute(rightData) {
+  List<int> _expandPermute(rightData) {
     var epByte = List.filled(48, 0);
     for (var i = 0; i < 8; i++) {
       if (i == 0) {
@@ -230,7 +229,7 @@ class Des {
     return epByte;
   }
 
-  List<int> xor(List<int> byteOne, List<int> byteTwo) {
+  List<int> _xor(List<int> byteOne, List<int> byteTwo) {
     var xorByte = List.filled(byteOne.length, 0);
     for (var i = 0; i < byteOne.length; i++) {
       xorByte[i] = byteOne[i] ^ byteTwo[i];
@@ -238,7 +237,7 @@ class Des {
     return xorByte;
   }
 
-  List<int> sBoxPermute(List<int> expandByte) {
+  List<int> _sBoxPermute(List<int> expandByte) {
     var sBoxByte = List.filled(32, 0);
     var binary = "";
     var s1 = [
@@ -316,7 +315,7 @@ class Des {
     return sBoxByte;
   }
 
-  List<int> pPermute(List<int> sBoxByte) {
+  List<int> _pPermute(List<int> sBoxByte) {
     var pBoxPermute = List.filled(32, 0);
     pBoxPermute[0] = sBoxByte[15];
     pBoxPermute[1] = sBoxByte[6];
@@ -353,7 +352,7 @@ class Des {
     return pBoxPermute;
   }
 
-  List<int> finallyPermute(List<int> endByte) {
+  List<int> _finallyPermute(List<int> endByte) {
     var fpByte = List.filled(64, 0);
     fpByte[0] = endByte[39];
     fpByte[1] = endByte[7];
